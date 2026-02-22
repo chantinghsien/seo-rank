@@ -1,60 +1,70 @@
-# **SEO 關鍵字排名紀錄工具 (BYOK 模式)**
+# **🚀 SEO 排名追蹤工具**
 
-這是一個專為 SEO 執行人員設計的輕量化、純前端工具。透過 Bring Your Own Key (BYOK) 模式，使用者可以使用自己的 Google API 金鑰來查詢關鍵字排名，並自動將結果記錄到指定的 Google Sheets 試算表中。本工具不經過任何後端伺服器，確保數據隱私與成本控制。
+這是一個純前端的網頁應用程式，可讓您透過輸入關鍵字與目標網址，自動使用 SerpApi 抓取 Google 前 100 名的搜尋結果，找出該網址的排名，並一鍵將紀錄（日期、關鍵字、網址、排名、標題）儲存到您私人的 Google Sheets 中。
 
-## **專案核心特色**
+## **✨ 特色**
 
-* 純前端架構：由 HTML、Tailwind CSS 與 JavaScript 組成，可直接部署於 GitHub Pages 或任何靜態網頁空間。  
-* 數據隱私保護：所有 API 金鑰與設定僅儲存在使用者的瀏覽器 localStorage 中，不外流至第三方伺服器。  
-* 自動化紀錄流程：整合 Google Sheets API，查詢完畢後自動將日期、關鍵字、網址、排名寫入指定試算表。  
-* 深度排名查詢：支援 Google Custom Search 分頁抓取功能，最高可查詢至搜尋結果的前 100 名。  
-* 響應式介面設計：採用深色主題與現代化 UI 佈局，支援手機與電腦端操作。
+* **純前端設計**：無須架設後端伺服器，直接透過 index.html 即可運行。  
+* **BYOK (Bring Your Own Key)**：金鑰僅存於瀏覽器 localStorage，確保資料安全。  
+* **無縫整合**：直接繞過 CORS 請求 SerpApi，並使用最新的 Google Identity Services 進行授權寫入試算表。
 
-## **快速上手指南**
+## **🛠️ 事前準備與金鑰取得教學**
 
-### **1\. Google Cloud 專案設定**
+在使用本工具之前，您需要準備三項資訊：
 
-1. 前往 Google Cloud Console。  
-2. 建立新專案，並在「API 和服務」中搜尋並啟用以下兩項 API：  
-   * Custom Search API  
-   * Google Sheets API  
-3. 前往「憑證」頁面：  
-   * 建立 API 金鑰（用於查詢排名）。  
-   * 建立 OAuth 2.0 用戶端 ID（選擇「網頁應用程式」）。  
-   * 重要：在 OAuth 的「授權的 JavaScript 來源」填入您部署的網址（例如：https://www.google.com/search?q=https://yourname.github.io）。
+### **1\. 取得 SerpApi Key**
 
-### **2\. 搜尋引擎設定 (CX)**
+1. 前往 [SerpApi 官方網站](https://serpapi.com/) 並註冊免費帳號。  
+2. 免費帳號每個月提供 100 次的免費搜尋額度。  
+3. 登入後，進入 Dashboard，您會看到 **Your Private API Key**。將這串英數字複製下來。
 
-1. 前往 Google Programmable Search Engine 官方網站。  
-2. 建立一個新的搜尋引擎。  
-3. 在設定中開啟「搜尋整個網路」，並獲取該搜尋引擎的搜尋引擎 ID (CX)。
+### **2\. 建立 Google Sheet 並取得 ID**
 
-### **3\. 試算表準備**
+1. 前往 [Google 試算表](https://docs.google.com/spreadsheets/) 建立一個新的空白試算表。  
+2. 為了方便閱讀，您可以先在第一列 (A1\~E1) 寫上標題：日期 | 關鍵字 | 目標網址 | 排名 | 網頁標題。  
+3. 觀察瀏覽器上方的網址列，網址結構如下：  
+   https://docs.google.com/spreadsheets/d/【這是一長串字母與數字的\_Sheet\_ID】/edit  
+4. 複製 d/ 到 /edit 之間的那串字元，這就是 **Google Sheet ID**。
 
-1. 建立一個新的 Google Sheet 試算表。  
-2. 從網址中複製試算表 ID（位於 /d/ 與 /edit 之間的字串）。
+### **3\. 取得 Google OAuth Client ID (最重要的一步)**
 
-### **4\. 開始使用**
+為了讓前端可以直接請求寫入您的試算表，您需要開啟 Google Cloud 的 API 權限：
 
-1. 開啟工具網頁，進入「API 設定」分頁。  
-2. 填入 API Key、CX、Sheet ID 以及 Client ID。  
-3. 點擊「儲存設定」。  
-4. 切換至「查詢與紀錄」，輸入目標網址與關鍵字後，點擊「查詢並記錄排名」。  
-5. 首次執行時，請依照瀏覽器彈窗指示完成 Google 帳號授權。
+1. 前往 [Google Cloud Console](https://console.cloud.google.com/)。  
+2. 點擊左上角建立一個新的專案（例如："SEO Tracker"）。  
+3. 進入 **「API 和服務」 \> 「程式庫」**，搜尋 Google Sheets API 並點擊 **啟用 (Enable)**。  
+4. 進入 **「API 和服務」 \> 「OAuth 同意畫面」**：  
+   * User Type 選擇「外部 (External)」，點擊建立。  
+   * 填寫必填的「應用程式名稱」、「使用者支援電子郵件」與底下的「開發人員聯絡資訊」。  
+   * 直接按儲存並繼續，直到完成（不需要發布，保持在測試狀態即可，並將您的 Google 帳號加入「測試使用者 (Test users)」中）。  
+5. 進入 **「API 和服務」 \> 「憑證」**：  
+   * 點擊上方「建立憑證」\>「OAuth 用戶端 ID」。  
+   * 應用程式類型選擇 **「網頁應用程式 (Web application)」**。  
+   * 在「已授權的 JavaScript 來源」中，**必須加入您的網站網址**。  
+     * 如果您使用 GitHub Pages 部署，請輸入 https://您的帳號.github.io  
+     * 如果您在本地測試，請輸入 http://localhost 或 http://127.0.0.1 加上您的 Port 號。  
+   * 點擊建立後，您將會得到一串 **用戶端 ID (Client ID)**，請複製它。
 
-## **技術細節**
+## **🚀 部署與使用方法**
 
-* 前端框架：Tailwind CSS  
-* 授權協議：Google Identity Services (GSI) OAuth 2.0 Implicit Flow  
-* API 串接：Fetch API  
-* 儲存方案：Browser LocalStorage
+### **部署至 GitHub Pages**
 
-## **使用須知與限制**
+1. 在 GitHub 建立一個新的公開 (Public) 儲存庫。  
+2. 將本專案產生的 index.html 上傳至該儲存庫。  
+3. 進入儲存庫的 **Settings \> Pages**，將 Source 選擇為 main 分支並儲存。  
+4. 幾分鐘後，您的專案就會在 https://\<您的帳號\>.github.io/\<儲存庫名稱\>/ 上線。
 
-* API 配額：Google Custom Search API 每日提供 100 次免費查詢額度。  
-* 安全性提醒：請確保 OAuth 設定中的「授權的 JavaScript 來源」與實際網址一致，否則授權功能將無法正常運作。  
-* 數據同步：本工具預設將資料寫入試算表的第一個工作表 (Sheet1)，欄位順序為日期、關鍵字、網址、排名。
+### **如何使用**
 
-## **授權說明**
+1. 打開上線的網頁。  
+2. 於左側「API 設定」區塊，依序填入：  
+   * **SerpApi Key**  
+   * **Google Client ID**  
+   * **Google Sheet ID**  
+3. 點擊 **「儲存設定」**（資料會存在您的瀏覽器，下次打開自動載入）。  
+4. 在右側輸入您想查詢的 **目標網址** (例: shopee.tw) 與 **目標關鍵字** (例: 水壺)。  
+5. 點擊 **「查詢並記錄至 Google Sheets」**。  
+6. 系統會先呼叫 SerpApi 取得排名，完成後會彈出 Google 授權視窗。  
+7. 登入您的 Google 帳號並同意授予編輯試算表的權限，資料就會成功寫入！
 
-本專案採用 MIT 授權協議，歡迎個人或企業自由修改與分發。
+**注意事項**：免費版的 corsproxy.io 有時會受到流量限制，如果發現卡在 SerpApi 查詢，通常是 Proxy 端的問題。若需用於正式商用，建議自行架設簡單的 Node.js 轉發伺服器。
